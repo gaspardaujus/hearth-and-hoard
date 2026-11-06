@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hearth &amp; Hoard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Reclaim your home, one real task at a time.">
+<meta name="theme-color" content="#121011">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hearth">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Texturina:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <header class="top" id="top"></header>
+  <main class="view" id="view"></main>
+  <p class="foot">Saved on this device · back up at the hearth</p>
+</div>
+
+<nav class="nav" aria-label="Sections"><div class="nav-in" id="nav"></div></nav>
+
+<div class="talk" id="talk" role="dialog" aria-label="Guide" hidden>
+  <div class="face" id="talk-face"></div>
+  <div class="talk-body">
+    <div class="talk-name"><b id="talk-who">Cinder</b><span id="talk-step"></span></div>
+    <p id="talk-text" aria-live="polite"></p>
+    <div class="row"><button class="btn small primary" id="talk-next" data-act="talk-next">Next</button><button class="linkbtn" data-act="talk-skip">Skip</button></div>
+  </div>
+</div>
+
+<div class="cutblock" id="cutblock" data-act="cut-skip" hidden><span>Tap to skip</span></div>
+<div class="overlay" id="sheetwrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div></div>
+<div class="overlay moment-wrap" id="momentwrap" hidden><div class="moment" id="moment" role="dialog" aria-modal="true" aria-labelledby="moment-title"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/core.js"></script>
+<script src="js/campaign-default.js"></script>
+<script src="js/rules.js"></script>
+<script src="js/state.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/art-chars.js"></script>
+<script src="js/art-world.js"></script>
+<script src="js/play.js"></script>
+<script src="js/views.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

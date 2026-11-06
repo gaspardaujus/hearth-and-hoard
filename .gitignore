@@ -1,0 +1,5 @@
+# Personal campaign files and backups never belong in this public repository.
+*backup*.json
+*campaign*.json
+.DS_Store
+Thumbs.db
