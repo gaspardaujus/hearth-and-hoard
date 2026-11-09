@@ -1,6 +1,6 @@
 'use strict';
 /* Offline support. Bump VERSION whenever any app file changes so installed copies fetch the update. */
-const VERSION = 'hearth-1.1.0';
+const VERSION = 'hearth-1.2.0';
 const CORE = 'core-' + VERSION, FONTS = 'fonts-v1';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',

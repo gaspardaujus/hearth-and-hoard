@@ -330,3 +330,5 @@ button.gearitem { cursor: pointer; }
 .sealedq summary { cursor: pointer; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--bone-dim); padding: 6px 0; }
 .sealedq[open] summary { margin-bottom: 6px; }
 .sealedq .lane { margin: 6px 0 4px; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

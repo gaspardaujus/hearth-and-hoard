@@ -121,3 +121,34 @@ function treatSave() {
 }
 function treatDelete() { const t = S.treats.find(x => x.id === sheetCtx.id); if (!t) { closeSheet(); return; } confirmSheet('Delete “' + esc(t.text) + '”?', 'It leaves your treats for good.', 'tr-del-yes', 'tr-del-no', sheetCtx); }
 function treatDeleteYes() { S.treats = S.treats.filter(x => x.id !== sheetCtx.id); save(); closeSheet(); render(); toast('Deleted'); }
+
+/* ---- hearth night: the weekly calendar reminder ----
+   The calendar files are made ahead of time by tools/make-calendar.mjs (cal/hearth-<day>-<hhmm>.ics), because an
+   iPhone adds an event from a real file that Safari opens, not from one a page builds on the fly. The event tells you
+   to open the app from the home screen; a link would open Safari, whose storage is separate from the installed app. */
+const HN_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
+const HN_TIMES = ['1700', '1730', '1800', '1830', '1900', '1930', '2000', '2030', '2100', '2130', '2200'];
+const HN_DEFAULT = { day: 'thu', time: '1930' };
+const hnOf = () => S.hearthNight || HN_DEFAULT;
+const hnTimeText = t => { const h = +t.slice(0, 2); return ((h + 11) % 12 + 1) + ':' + t.slice(2) + (h < 12 ? ' AM' : ' PM'); };
+const hnDayName = d => (HN_DAYS.find(x => x[0] === d) || HN_DAYS[3])[1];
+const hnFile = () => { const n = hnOf(); return 'cal/hearth-' + n.day + '-' + n.time + '.ics'; };
+const hnTonight = () => (new Date().getDay() + 6) % 7 === HN_DAYS.findIndex(x => x[0] === hnOf().day);
+function hearthNightPanel() {
+  const n = hnOf();
+  return '<section class="panel" id="hearthnight" aria-label="Hearth night"><div class="eyebrow">Hearth night · weekly reminder</div>' +
+    '<p class="small">Your hearth night is <b>' + hnDayName(n.day) + 's at ' + hnTimeText(n.time) + '</b>. Put it in your phone’s calendar with an alert at the start time.</p>' +
+    '<div class="pair"><label class="field" for="hn-day">Night<select id="hn-day">' + HN_DAYS.map(([k, l]) => '<option value="' + k + '"' + (k === n.day ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>' +
+    '<label class="field" for="hn-time">Time<select id="hn-time">' + HN_TIMES.map(t => '<option value="' + t + '"' + (t === n.time ? ' selected' : '') + '>' + hnTimeText(t) + '</option>').join('') + '</select></label></div>' +
+    '<div class="row"><a class="btn primary" href="' + hnFile() + '" target="_blank" rel="noopener" data-act="hn-add">Add to my calendar</a></div>' +
+    '<p class="small muted">It opens the event in Safari: tap <b>Add to Calendar</b>. If nothing happens, <button class="linkbtn" data-act="hn-copy">copy the link</button> and paste it into Safari. The event reminds you to open Hearth &amp; Hoard from your home screen. If you change the night or time later, add the new event and delete the old one.' + (n.addedAt ? ' Last added ' + ago(daysSince(n.addedAt)) + '.' : '') + '</p></section>';
+}
+function setHearthNight(field, value) {
+  const n = Object.assign({}, hnOf()); n[field] = value; delete n.addedAt;
+  S.hearthNight = n; save(); render(); toast('Hearth night: ' + hnDayName(n.day) + 's at ' + hnTimeText(n.time));
+}
+function copyHearthLink() {
+  const url = new URL(hnFile(), location.href).href;
+  const manual = () => openSheet('<h2 id="sheet-title" class="display h-sm">Calendar link</h2><p class="small">Copy this link and open it in Safari:</p><p class="small" style="word-break:break-all;color:var(--bone)">' + esc(url) + '</p><div class="row"><button class="btn" data-act="close">Done</button></div>');
+  try { navigator.clipboard.writeText(url).then(() => toast('Link copied. Paste it into Safari.'), manual); } catch (e) { manual(); }
+}

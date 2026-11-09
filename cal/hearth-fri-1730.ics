@@ -1,0 +1,22 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Hearth and Hoard//Hearth night//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:hearth-night-fri-1730@hearth-and-hoard
+DTSTAMP:20261109T000000Z
+DTSTART:20261113T173000
+DURATION:PT15M
+RRULE:FREQ=WEEKLY;BYDAY=FR
+SUMMARY:Hearth night · Hearth & Hoard
+DESCRIPTION:Open Hearth & Hoard from your home screen and tend the hearth: 
+ what left\, what is stuck\, what is due\, and what comes next. About five 
+ minutes.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Hearth night: tend the hearth
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+END:VCALENDAR

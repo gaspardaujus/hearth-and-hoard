@@ -36,7 +36,7 @@ function newGame(c) {
     font: { h: 'grenze', b: 'barlow' },
     gear: { head: 'hood', cloak: 'worn', chest: 'tunic', boots: 'wraps', weapon: 'none', shield: 'none', lantern: 'small' },
     cat: { name: 'Cinder', coat: 'black' },
-    seals: {}, log: [], lastBackupAt: null
+    seals: {}, hearthNight: { day: 'thu', time: '1930' }, log: [], lastBackupAt: null
   };
 }
 
@@ -57,6 +57,8 @@ function migrate(st, from) {
   st.treats = st.treats.map(t => { const u = treatUnlockOf(t); if (!u || !t.text) return null; delete t.boss; t.unlock = u; if (t.unlockedAt === undefined) t.unlockedAt = null; return t; }).filter(Boolean);
   if (!st.seals || typeof st.seals !== 'object') st.seals = sealsFrom(st.batches);   // past departures count; their seals arrive quietly
   st.treats.forEach(t => { if (!t.unlockedAt && treatMetIn(t, st)) t.unlockedAt = Date.now(); });
+  const hn = st.hearthNight;   // the weekly hearth night: a day and a half-hour slot the calendar files exist for
+  if (!hn || !HN_DAYS.some(d => d[0] === hn.day) || !HN_TIMES.includes(hn.time)) st.hearthNight = Object.assign({}, HN_DEFAULT);
   st.schema = SCHEMA;
   return st;
 }

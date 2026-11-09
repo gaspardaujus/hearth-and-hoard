@@ -6,7 +6,7 @@ import url from 'node:url';
 
 const root = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const port = Number(process.argv[2]) || 5173;
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.ics': 'text/calendar; charset=utf-8', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   if (p.endsWith('/')) p += 'index.html';

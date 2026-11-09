@@ -82,7 +82,9 @@ function act(a, el) {
     case 'tr-del-no': treatSheet(sheetCtx); return;
     case 'claim': { const t = S.treats.find(x => x.id === d.id); t.claimed = true; save(); moment({ relic: 'coaster', eyebrow: 'Treat claimed', title: 'Enjoy it', body: t.text + '. You earned this.', lines: [], sound: 'level' }); render(); return; }
     case 'start-over': openSheet('<h2 id="sheet-title" class="display h-sm">Start over?</h2><p class="small">This erases your progress on this device and starts your campaign again from the first region. Your quests, chores and treats stay; your cat, sound and typeface stay too.</p><p class="small muted">Back up first if you might want this progress.</p><div class="row"><button class="btn" data-act="backup">Back up first</button><button class="btn primary" data-act="start-over-yes">Start over</button><button class="btn" data-act="close">Cancel</button></div>'); return;
-    case 'start-over-yes': { const keep = { sound: S.sound, cat: S.cat, font: S.font, lastBackupAt: S.lastBackupAt }; S = newGame(campaignOf(S)); Object.assign(S, keep); applyNames(); save(); closeSheet(); tab = 'sanctuary'; sub = null; mapRegion = null; moveTab = null; render(); window.scrollTo(0, 0); toast('A fresh start'); setTimeout(startTalk, 500); return; }
+    case 'hn-add': S.hearthNight = Object.assign({}, hnOf(), { addedAt: Date.now() }); save(); toast('Opening your hearth night event…'); return;
+    case 'hn-copy': copyHearthLink(); return;
+    case 'start-over-yes': { const keep = { sound: S.sound, cat: S.cat, font: S.font, lastBackupAt: S.lastBackupAt, hearthNight: S.hearthNight }; S = newGame(campaignOf(S)); Object.assign(S, keep); applyNames(); save(); closeSheet(); tab = 'sanctuary'; sub = null; mapRegion = null; moveTab = null; render(); window.scrollTo(0, 0); toast('A fresh start'); setTimeout(startTalk, 500); return; }
     case 'backup': exportBackup(); return;
     case 'import-file': pickFile(); return;
     case 'import-yes': { const dd = sheetCtx && sheetCtx.data; if (!dd || !applyImport(dd)) return; closeSheet(); render(); window.scrollTo(0, 0); toast(dd.kind === 'backup' ? 'Backup restored' : 'Campaign started'); if (!S.tutorialDone) setTimeout(startTalk, 500); return; }
@@ -112,6 +114,10 @@ document.addEventListener('pointerdown', e => {
   b.appendChild(s); setTimeout(() => s.remove(), 520);
 });
 document.addEventListener('input', e => { if (e.target.id !== 'catname') return; S.cat.name = e.target.value.trim().slice(0, 16) || 'Cinder'; save(); $('#talk-who').textContent = S.cat.name; });
-document.addEventListener('change', e => { if (e.target.id === 'catname') render(); });
+document.addEventListener('change', e => {
+  if (e.target.id === 'catname') render();
+  else if (e.target.id === 'hn-day') setHearthNight('day', e.target.value);
+  else if (e.target.id === 'hn-time') setHearthNight('time', e.target.value);
+});
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (cut) endCut(); else if (!$('#sheetwrap').hidden) { if (!(sheetCtx && sheetCtx.lock)) closeSheet(); } else if (talkStep >= 0) endTalk(); } });
 

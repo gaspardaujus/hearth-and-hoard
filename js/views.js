@@ -111,8 +111,8 @@ function finalPanel() {
     '<div class="relic">' + img(RELIC.seal, 5, { mono: won ? null : '#4A423D' }) + '<div class="muted small">' + (won ? 'Relic: Family Seal' : 'Relic waiting inside: Family Seal') + '</div></div></section>';
 }
 function hearthPanel() {
-  const done = S.hearth.done;
-  return '<section class="panel" id="hearthpanel" aria-label="The hearth"><div class="split"><div><div class="eyebrow">The Hearth · weekly</div><h3 class="display h-sm">' + (done ? 'The hearth burns bright' : 'The hearth burns low') + '</h3></div>' + img(ICON.sanctuary, 4) + '</div>' +
+  const done = S.hearth.done, n = hnOf(), tonight = !done && hnTonight();
+  return '<section class="panel' + (tonight ? ' ember' : '') + '" id="hearthpanel" aria-label="The hearth"><div class="split"><div><div class="eyebrow' + (tonight ? ' ember' : '') + '">The Hearth · ' + hnDayName(n.day) + 's at ' + hnTimeText(n.time) + '</div><h3 class="display h-sm">' + (done ? 'The hearth burns bright' : tonight ? 'Tonight is hearth night' : 'The hearth burns low') + '</h3></div>' + img(ICON.sanctuary, 4) + '</div>' +
     '<p class="small">' + (done ? 'Reviewed this week. Smoke rises over the keep.' : 'Five minutes, once a week: what left, what is stuck, what is due, and what comes next.') + '</p><div><button class="btn' + (done ? '' : ' primary') + '" data-act="hearth-open">' + (done ? 'Visit the hearth' : 'Tend the hearth') + '</button></div></section>';
 }
 
@@ -214,7 +214,7 @@ function characterView() {
 function hearthView() {
   const HS = S.hearth;
   let h = '<div class="row"><button class="btn small" data-act="hearth-close">← Back</button></div>' + sceneBlock(null, 'refuge');
-  const cal = '<section class="panel"><div class="eyebrow">Weekly reminder</div><p class="small muted">Coming in a later update: a repeating hearth night in your phone’s calendar, with a link back here.</p></section>', fresh = S.lastBackupAt && daysSince(S.lastBackupAt) < 7;
+  const cal = hearthNightPanel(), fresh = S.lastBackupAt && daysSince(S.lastBackupAt) < 7;
   if (HS.done) {
     const picks = HS.picks.map(findQ).filter(Boolean), plans = Object.keys(HS.plans).map(id => { const b = findB(id); return b ? esc(b.name) + ' → ' + HS.plans[id] : ''; }).filter(Boolean);
     return h + '<section class="panel sage"><div class="eyebrow sage">This week</div><h2 class="display h-sm">The hearth burns bright</h2><p class="small">Your picks come first on the quest card. Smoke rises over the keep.</p>' +

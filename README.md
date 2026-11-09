@@ -39,9 +39,12 @@ Whenever any app file changes, bump `VERSION` in `sw.js` so installed copies pic
 | `js/editor.js` | Adding, renaming and deleting quests, chores, departures and treats |
 | `js/main.js` | Start-up and offline registration |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Offline support and home-screen install |
-| `tools/` | Local test server and the icon generator |
+| `cal/` | Weekly "Hearth night" calendar events, one per day and half hour from 5:00 PM to 10:00 PM |
+| `tools/` | Local test server, the icon generator and the calendar generator (`node tools/make-calendar.mjs`) |
 
 The script files share one scope and load in the order listed in `index.html`.
+
+The hearth screen links to the `cal/` file for the chosen night and time. The files are made ahead of time because an iPhone adds an event from a real `.ics` file opened in Safari, but not from one a page builds on the fly. Each event repeats weekly, lasts 15 minutes and alerts at its start time. It tells you to open the app from the home screen rather than linking to it, because a link would open Safari, whose storage is separate from the installed app.
 
 ## Campaign files
 
