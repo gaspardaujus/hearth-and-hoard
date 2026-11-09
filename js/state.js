@@ -4,7 +4,7 @@
    move old saves forward instead of wiping them. Backups and campaigns are plain JSON files the player keeps. */
 const APP_ID = 'hearth-and-hoard';
 const STORE_KEY = 'hearth-and-hoard';
-const SCHEMA = 1;
+const SCHEMA = 2;   // 2: departures carry a quantity and sale price; treats unlock by boss, level or seal; seals earned
 let idSeq = 0;
 const newId = p => p + Date.now().toString(36) + (idSeq++).toString(36);
 
@@ -17,9 +17,9 @@ function newGame(c) {
     let ms = r.milestones && r.milestones.length ? r.milestones : k === 'vault' ? PHASES.map(p => ({ text: p[0], note: p[1] })) : [];
     ms = ms.map(m => typeof m === 'string' ? { text: m } : m);
     bosses[k] = { ms: ms.map(m => ({ id: newId('m'), text: String(m.text || ''), note: m.note || '', auto: m.auto === 'allgone' || m.auto === 'onegone' ? m.auto : null, done: i < startAt, doneAt: i < startAt ? now : null })) };
-    if (r.treat) treats.push({ id: newId('t'), text: String(r.treat), boss: k, claimed: false });
+    if (r.treat) treats.push({ id: newId('t'), text: String(r.treat), unlock: { kind: 'boss', boss: k }, claimed: false, unlockedAt: null });
   });
-  (c.treats || []).forEach(t => { if (t && t.text && ORDER.includes(t.boss)) treats.push({ id: newId('t'), text: String(t.text), boss: t.boss, claimed: false }); });
+  (c.treats || []).forEach(t => { const u = treatUnlockOf(t); if (t && t.text && u) treats.push({ id: newId('t'), text: String(t.text), unlock: u, claimed: false, unlockedAt: null }); });
   const status = {};
   ORDER.forEach((k, i) => { status[k] = i < startAt ? 'restored' : i === startAt ? 'active' : k === 'vault' ? 'locked' : 'dark'; });
   return {
@@ -36,7 +36,7 @@ function newGame(c) {
     font: { h: 'grenze', b: 'barlow' },
     gear: { head: 'hood', cloak: 'worn', chest: 'tunic', boots: 'wraps', weapon: 'none', shield: 'none', lantern: 'small' },
     cat: { name: 'Cinder', coat: 'black' },
-    log: [], lastBackupAt: null
+    seals: {}, log: [], lastBackupAt: null
   };
 }
 
@@ -52,6 +52,11 @@ function migrate(st, from) {
   if (typeof st.xp !== 'number') st.xp = 0;
   if (typeof st.level !== 'number' || st.level < 1) st.level = 1;
   if (st.sound === undefined) st.sound = true;
+  /* schema 2: quantities and sale prices on departures, treats that say what earns them, seals */
+  st.batches.forEach(b => { if (!(b.qty >= 1)) b.qty = 1; if (b.value === undefined) b.value = null; });
+  st.treats = st.treats.map(t => { const u = treatUnlockOf(t); if (!u || !t.text) return null; delete t.boss; t.unlock = u; if (t.unlockedAt === undefined) t.unlockedAt = null; return t; }).filter(Boolean);
+  if (!st.seals || typeof st.seals !== 'object') st.seals = sealsFrom(st.batches);   // past departures count; their seals arrive quietly
+  st.treats.forEach(t => { if (!t.unlockedAt && treatMetIn(t, st)) t.unlockedAt = Date.now(); });
   st.schema = SCHEMA;
   return st;
 }
@@ -126,6 +131,6 @@ function campaignOf(st) {
     name: st.campaignName, start: 'threshold', regions,
     quests: st.quests.map(q => ({ region: q.region, title: q.title, desc: q.desc, kind: q.kind, repeat: q.repeat || 0, waitsOn: q.waitsOn || null })),
     upkeep: st.upkeep.map(u => ({ title: u.title, region: u.region, every: u.every })),
-    treats: st.treats.map(t => ({ text: t.text, boss: t.boss }))
+    treats: st.treats.map(t => ({ text: t.text, unlock: t.unlock }))
   };
 }

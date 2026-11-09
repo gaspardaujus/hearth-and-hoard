@@ -67,9 +67,10 @@ function applyDefeat(rg) {
   if (nx) { S.status[nx] = 'active'; S.region = nx; }
   logEvent('boss', { rg, boss: REGIONS[rg].boss });
   S.xp += 100; while (S.xp >= need()) { S.xp -= need(); S.level++; }
+  const tr = unlockTreats();
   save();
   const fresh = unlockedIds().filter(i => !before.includes(i));
-  const lines = ['<span class="x">+100 XP</span>', '<span class="t">Relic: ' + esc(REGIONS[rg].relic[0]) + '</span>'].concat(S.treats.filter(t => t.boss === rg && !t.claimed).map(t => '<span class="r">Treat unlocked: ' + esc(t.text) + '</span>'));
+  const lines = ['<span class="x">+100 XP</span>', '<span class="t">Relic: ' + esc(REGIONS[rg].relic[0]) + '</span>'].concat(tr.filter(t => !t.claimed).map(treatLine));
   Object.keys(SETS).forEach(id => { const s = SETS[id]; if (Object.keys(s.slots).every(sl => fresh.includes(sl + ':' + s.slots[sl]) || before.includes(sl + ':' + s.slots[sl])) && Object.keys(s.slots).some(sl => fresh.includes(sl + ':' + s.slots[sl]))) lines.push('<span class="t">Full set unlocked: ' + esc(s.name) + ' · wear all four for ' + esc(s.aura) + '</span>'); });
   if (S.level > oldLv) lines.push('<span class="t">Level ' + S.level + ' · ' + esc(titleFor(S.level)) + '</span>');
   const body = rg === 'vault' ? 'Everything in scope is home or gone, and every keepsake has its place. The campaign is won.' : REGIONS[rg].name + ' is reclaimed.' + (nx === 'vault' ? ' The Keeper of All That Was waits at the vault door.' : nx ? ' The way to ' + REGIONS[nx].name + ' is open.' : '');
@@ -81,10 +82,11 @@ function applyDefeat(rg) {
 function addXP(n, why, quiet, hold) {
   const old = S.level, before = unlockedIds();
   S.xp += n; while (S.xp >= need()) { S.xp -= need(); S.level++; }
+  const tr = S.level > old ? unlockTreats() : [];
   save();
   if (!quiet && !quietXP) toast('+' + n + ' XP' + (why ? ' · ' + why : ''));
   if (S.level > old) {
-    const fresh = unlockedIds().filter(i => !before.includes(i)), m = { hero: true, eyebrow: 'Your hero grows', title: 'Level ' + S.level, body: fresh.length ? 'A new title, and new gear for the armory.' : 'A new title is yours.', lines: ['<span class="t">' + esc(titleFor(S.level)) + '</span>'], gear: fresh, sound: 'level' };
+    const fresh = unlockedIds().filter(i => !before.includes(i)), m = { hero: true, eyebrow: 'Your hero grows', title: 'Level ' + S.level, body: fresh.length ? 'A new title, and new gear for the armory.' : 'A new title is yours.', lines: ['<span class="t">' + esc(titleFor(S.level)) + '</span>'].concat(tr.map(treatLine)), gear: fresh, sound: 'level' };
     if (hold) return m; later(900, () => moment(m));
   }
   return null;
@@ -131,7 +133,7 @@ function showMoment() {
     if (m.gear.length >= 3) { const G = curGear(); m.gear.forEach(k => { const { s, it } = gearItem(k); G[s] = it; }); gh = '<div class="eyebrow ember">New gear</div><img class="px" src="' + heroThumb(G, 3) + '" alt="Your hero wearing the new gear" style="width:120px;height:162px"><div class="small muted">' + m.gear.map(k => esc(gearItem(k).it.name)).join(' · ') + '</div>' + wear; }
     else gh = '<div class="eyebrow ember">New gear</div><div class="newgear">' + m.gear.map(k => { const { s, it } = gearItem(k); return '<div class="ng"><img class="px" src="' + heroThumb(gearWith(s, it.id), 2) + '" alt="">' + esc(it.name) + '</div>'; }).join('') + '</div>' + wear;
   }
-  $('#moment').innerHTML = (m.relic ? img(RELIC[m.relic], 9) : m.hero ? '<img class="px" src="' + heroThumb(curGear(), 2) + '" alt="" style="width:80px;height:108px">' : '') +
+  $('#moment').innerHTML = (m.relic ? img(RELIC[m.relic], 9) : m.sealArt ? sealArt(m.sealArt, 6) : m.hero ? '<img class="px" src="' + heroThumb(curGear(), 2) + '" alt="" style="width:80px;height:108px">' : '') +
     '<div class="eyebrow ember">' + esc(m.eyebrow) + '</div><h2 class="display" id="moment-title">' + esc(m.title) + '</h2>' + (m.body ? '<p class="muted">' + esc(m.body) + '</p>' : '') +
     (m.lines && m.lines.length ? '<div class="lines">' + m.lines.join('') + '</div>' : '') + gh + '<button class="btn primary" data-act="moment-close">Continue</button>';
   $('#momentwrap').hidden = false; $('#moment').querySelector('button.primary').focus(); sfx(m.sound || 'gone');
@@ -141,16 +143,17 @@ function celebrate() { cheer = performance.now(); }
 function gone(b) {
   const rg = b.boss, live = bossLive(rg), before = live ? metOf(rg) : 0, wasWarded = warded(rg) && blockers(rg).length === 1 && blockers(rg)[0] === b;
   b.state = 'gone'; b.goneAt = b.touchedAt = Date.now(); b.steps = []; b.pre = null;
-  logEvent('gone', { name: b.name, dest: b.dest, rg });
-  const hit = !wasWarded && live && metOf(rg) > before;
-  const show = () => moment({ eyebrow: 'Departure complete', title: 'It’s gone.', body: b.name + ' → ' + b.dest + '. Not sorted, not waiting by the door. Gone.' + (wasWarded ? ' The ward on ' + REGIONS[rg].boss + ' is broken.' : hit ? ' ' + REGIONS[rg].boss + ' takes the blow.' : ''), lines: ['<span class="x">+40 XP</span>'], sound: 'gone' });
+  const n = qtyOf(b);
+  logEvent('gone', { name: b.name, dest: b.dest, rg, qty: n, value: b.value || null });
+  const hit = !wasWarded && live && metOf(rg) > before, seals = awardSeals(), total = tallyOf(S.batches).total;
+  const show = () => moment({ eyebrow: 'Departure complete', title: 'It’s gone.', body: b.name + (n > 1 ? ' (' + things(n) + ')' : '') + ' → ' + b.dest + (b.value > 0 ? ' for ' + money(b.value) : '') + '. Not sorted, not waiting by the door. Gone.' + (wasWarded ? ' The ward on ' + REGIONS[rg].boss + ' is broken.' : hit ? ' ' + REGIONS[rg].boss + ' takes the blow.' : ''), lines: ['<span class="x">+40 XP</span>', '<span class="t">The Ledger of Release: ' + things(total) + ' gone</span>'], sound: 'gone' });
   const lvm = addXP(40, '', true, true);
   toSanctuary(); render();
   withScene(() => {
     if (wasWarded) { heroDo('cast'); sfx('light'); later(300, () => { wardBreak(rg); later(450, () => fxMilestone(rg)); }); }
     else if (hit) fxMilestone(rg);
     else fxDeparture(S.region);
-    later(wasWarded || hit ? 2000 : 1200, () => { show(); if (lvm) moment(lvm); });
+    later(wasWarded || hit ? 2000 : 1200, () => { show(); seals.forEach(moment); if (lvm) moment(lvm); });
   });
 }
 function withScene(fn) {

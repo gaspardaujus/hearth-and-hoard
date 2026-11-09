@@ -19,7 +19,7 @@ function act(a, el) {
     case 'active-stop': S.active = null; addXP(5, 'effort counts. The quest stays open'); celebrate(); render(); return;
     case 'active-small-done': S.active = null; addXP(5, 'smaller goal done'); render(); withScene(() => fxQuest(S.region)); return;
     case 'active-cancel': S.active = null; save(); render(); return;
-    case 'sort-to-outbox': { const q = findQ(sheetCtx.q), dest = chosenDest(), name = ($('#bname').value || '').trim() || 'Unnamed batch'; const now = Date.now(); S.batches.unshift({ id: newId('b'), name: name === 'Unnamed batch' ? 'From: ' + q.title : name, dest, state: 'sorted', boss: q.region, steps: steps(dest), pre: null, sortedAt: now, touchedAt: now }); logEvent('sorted', { name, dest }); closeSheet(); completeQuest(q, 'sorted, now a departure'); return; }
+    case 'sort-to-outbox': { const q = findQ(sheetCtx.q), dest = chosenDest(), name = ($('#bname').value || '').trim() || 'Unnamed batch'; const now = Date.now(); S.batches.unshift({ id: newId('b'), name: name === 'Unnamed batch' ? 'From: ' + q.title : name, qty: readQty(), value: null, dest, state: 'sorted', boss: q.region, steps: steps(dest), pre: null, sortedAt: now, touchedAt: now }); logEvent('sorted', { name, dest }); closeSheet(); completeQuest(q, 'sorted, now a departure'); return; }
     case 'sort-later': { const q = findQ(sheetCtx.q), now = Date.now(), name = ($('#bname').value || '').trim() || 'From: ' + q.title; S.reviewLater.push({ id: newId('r'), item: name, note: 'Set aside while doing: ' + q.title + '.', due: now + 14 * DAY, outcome: null, createdAt: now }); logEvent('later', { name }); closeSheet(); completeQuest(q, 'set aside to decide later'); return; }
     case 'sort-nothing': { const q = findQ(sheetCtx.q); closeSheet(); completeQuest(q); return; }
     case 'pick-dest': $('#sheet').querySelectorAll('.pchip').forEach(b => b.setAttribute('aria-pressed', b === el)); return;
@@ -29,10 +29,28 @@ function act(a, el) {
     case 'stage-smaller-pick': { const b = findB(sheetCtx.b); b.pre = d.label; save(); closeSheet(); toast('Next: ' + d.label); render(); return; }
     case 'pre-done': { const b = findB(d.id); b.pre = null; b.touchedAt = Date.now(); addXP(5, 'one step closer'); toSanctuary(); render(); withScene(() => fxDeparture(S.region)); return; }
     case 'batch-stage': { const b = findB(d.id); b.state = 'staged'; b.stagedAt = b.touchedAt = Date.now(); b.pre = null; logEvent('staged', { name: b.name }); addXP(5, 'set by the door'); toSanctuary(); render(); withScene(() => fxDeparture(S.region)); return; }
-    case 'batch-step': { const b = findB(d.id); b.steps.shift(); if (!b.steps.length) { gone(b); return; } b.touchedAt = Date.now(); addXP(5, 'next: ' + b.steps[0].t.toLowerCase()); toSanctuary(); render(); withScene(() => fxDeparture(S.region)); return; }
-    case 'batch-gone': gone(findB(d.id)); return;
-    case 'add-batch': openSheet('<h2 id="sheet-title" class="display h-sm">Add a departure</h2><label class="field" for="bname">What is it<input id="bname" placeholder="Box of old DVDs" autocomplete="off"></label>' + destChips('Donate') + '<div class="row"><button class="btn primary" data-act="add-batch-save">Add as sorted</button><button class="btn" data-act="close">Cancel</button></div>'); return;
-    case 'add-batch-save': { const dest = chosenDest(), name = ($('#bname').value || '').trim() || 'Unnamed batch'; const now = Date.now(); S.batches.unshift({ id: newId('b'), name, dest, state: 'sorted', boss: S.region, steps: steps(dest), pre: null, sortedAt: now, touchedAt: now }); logEvent('sorted', { name, dest }); save(); closeSheet(); toast('Added to sorted departures'); render(); return; }
+    case 'batch-step': { const b = findB(d.id); b.steps.shift(); if (!b.steps.length) { finishDeparture(b); return; } b.touchedAt = Date.now(); addXP(5, 'next: ' + b.steps[0].t.toLowerCase()); toSanctuary(); render(); withScene(() => fxDeparture(S.region)); return; }
+    case 'batch-gone': finishDeparture(findB(d.id)); return;
+    case 'sale-save': { const b = findB(sheetCtx.b); if (!b) { closeSheet(); return; } b.value = priceOf($('#bval')); closeSheet(); gone(b); return; }
+    case 'sale-skip': { const b = findB(sheetCtx.b); closeSheet(); if (b) gone(b); return; }
+    case 'add-batch': openSheet('<h2 id="sheet-title" class="display h-sm">Add a departure</h2><label class="field" for="bname">What is it<input id="bname" placeholder="Box of old DVDs" autocomplete="off"></label>' + qtyField(1) + destChips('Donate') + '<div class="row"><button class="btn primary" data-act="add-batch-save">Add as sorted</button><button class="btn" data-act="close">Cancel</button></div>'); return;
+    case 'add-batch-save': { const dest = chosenDest(), name = ($('#bname').value || '').trim() || 'Unnamed batch'; const now = Date.now(); S.batches.unshift({ id: newId('b'), name, qty: readQty(), value: null, dest, state: 'sorted', boss: S.region, steps: steps(dest), pre: null, sortedAt: now, touchedAt: now }); logEvent('sorted', { name, dest }); save(); closeSheet(); toast('Added to sorted departures'); render(); return; }
+    case 'qty': stepQty(+d.d); return;
+    case 'b-edit': batchSheet(d.id); return;
+    case 'b-save': batchSave(); return;
+    case 'b-del': batchDelete(); return;
+    case 'b-del-yes': batchDeleteYes(); return;
+    case 'b-del-no': batchSheet(sheetCtx.b); return;
+    case 'task-add': addTask(d.rg); return;
+    case 'chore-add': addTask(S.region, 'chore'); return;
+    case 'q-edit': editQuest(d.id); return;
+    case 'u-edit': editChore(d.id); return;
+    case 'tk-kind': taskSheet(Object.assign({}, sheetCtx, taskForm(), { kind: d.k })); return;
+    case 'tk-save': taskSave(); return;
+    case 'tk-del': taskDelete(); return;
+    case 'tk-del-yes': taskDeleteYes(); return;
+    case 'tk-del-no': taskSheet(sheetCtx); return;
+    case 'ledger-open': tab = 'character'; sub = null; mapRegion = null; render(); { const l = $('#ledger'); if (l) l.scrollIntoView({ behavior: SMOOTH, block: 'start' }); } return;
     case 'ms-toggle': { const rg = d.rg, m = msOf(rg).find(x => x.id === d.id); if (!m || m.auto || S.status[rg] !== 'active') return; m.done = !m.done; m.doneAt = m.done ? Date.now() : null; if (m.done) logEvent('milestone', { rg, text: m.text }); save(); render(); if (m.done) { withScene(() => fxMilestone(rg)); if (msOf(rg).every(x => msDone(x, rg))) later(1400, checkBoss); } return; }
     case 'wait-answered': completeQuest(findQ(d.id), 'answer received'); return;
     case 'wait-nudge': findQ(d.id).waitingSince = Date.now(); save(); toast('Noted. Still waiting, and that is fine.'); render(); return;
@@ -47,7 +65,7 @@ function act(a, el) {
     case 'hearth-back': S.hearth.step = Math.max(0, S.hearth.step - 1); save(); render(); return;
     case 'hearth-plan': S.hearth.plans[d.id] = d.day; save(); render(); return;
     case 'hearth-pick': { const p = S.hearth.picks, i = p.indexOf(d.id); if (i >= 0) p.splice(i, 1); else if (p.length < 3) p.push(d.id); save(); render(); return; }
-    case 'review': { const r = S.reviewLater.find(x => x.id === d.id), now = Date.now(); r.lastChoice = d.c; r.decidedAt = now; if (d.c === 'keep') r.outcome = 'keep'; else if (d.c === 'go') { r.outcome = 'go'; S.batches.unshift({ id: newId('b'), name: r.item, dest: 'Donate', state: 'sorted', boss: S.region, steps: steps('Donate'), pre: null, sortedAt: now, touchedAt: now }); } else { r.outcome = null; r.due = now + 14 * DAY; } logEvent('review', { item: r.item, c: d.c }); addXP(5, 'decision made'); render(); return; }
+    case 'review': { const r = S.reviewLater.find(x => x.id === d.id), now = Date.now(); r.lastChoice = d.c; r.decidedAt = now; if (d.c === 'keep') r.outcome = 'keep'; else if (d.c === 'go') { r.outcome = 'go'; S.batches.unshift({ id: newId('b'), name: r.item, qty: 1, value: null, dest: 'Donate', state: 'sorted', boss: S.region, steps: steps('Donate'), pre: null, sortedAt: now, touchedAt: now }); } else { r.outcome = null; r.due = now + 14 * DAY; } logEvent('review', { item: r.item, c: d.c }); addXP(5, 'decision made'); render(); return; }
     case 'hearth-finish': S.hearth.done = true; S.hearth.lastDoneAt = Date.now(); logEvent('hearth'); addXP(20, 'the hearth is lit'); sfx('light'); render(); window.scrollTo(0, 0); return;
     case 'gear-slot': gearSlot = d.slot; render(); return;
     case 'equip': S.gear[d.slot] = d.id; save(); sfx('step'); render(); return;
@@ -55,8 +73,13 @@ function act(a, el) {
     case 'wear-new': d.ids.split(',').forEach(k => { const [s, id] = k.split(':'); S.gear[s] = id; }); save(); toast('New gear equipped'); closeMoment(); return;
     case 'font': S.font[d.kind] = d.k; save(); render(); return;
     case 'cat-coat': S.cat.coat = d.coat; save(); sfx('meow'); render(); return;
-    case 'add-treat': openSheet('<h2 id="sheet-title" class="display h-sm">Add a real-life treat</h2><label class="field" for="tname">The treat<input id="tname" placeholder="Pizza night" autocomplete="off"></label><label class="field" for="tboss">Unlocks when you defeat<select id="tboss">' + ORDER.map(k => '<option value="' + k + '">' + esc(REGIONS[k].boss) + '</option>').join('') + '</select></label><div class="row"><button class="btn primary" data-act="add-treat-save">Add treat</button><button class="btn" data-act="close">Cancel</button></div>'); return;
-    case 'add-treat-save': { const text = ($('#tname').value || '').trim(); if (!text) { toast('Name the treat first'); return; } S.treats.push({ id: newId('t'), text, boss: $('#tboss').value, claimed: false }); save(); closeSheet(); render(); return; }
+    case 'add-treat': addTreat(); return;
+    case 'tr-edit': editTreat(d.id); return;
+    case 'tr-kind': treatSheet(Object.assign({}, sheetCtx, treatForm(), { kind: d.k })); return;
+    case 'tr-save': treatSave(); return;
+    case 'tr-del': treatDelete(); return;
+    case 'tr-del-yes': treatDeleteYes(); return;
+    case 'tr-del-no': treatSheet(sheetCtx); return;
     case 'claim': { const t = S.treats.find(x => x.id === d.id); t.claimed = true; save(); moment({ relic: 'coaster', eyebrow: 'Treat claimed', title: 'Enjoy it', body: t.text + '. You earned this.', lines: [], sound: 'level' }); render(); return; }
     case 'start-over': openSheet('<h2 id="sheet-title" class="display h-sm">Start over?</h2><p class="small">This erases your progress on this device and starts your campaign again from the first region. Your quests, chores and treats stay; your cat, sound and typeface stay too.</p><p class="small muted">Back up first if you might want this progress.</p><div class="row"><button class="btn" data-act="backup">Back up first</button><button class="btn primary" data-act="start-over-yes">Start over</button><button class="btn" data-act="close">Cancel</button></div>'); return;
     case 'start-over-yes': { const keep = { sound: S.sound, cat: S.cat, font: S.font, lastBackupAt: S.lastBackupAt }; S = newGame(campaignOf(S)); Object.assign(S, keep); applyNames(); save(); closeSheet(); tab = 'sanctuary'; sub = null; mapRegion = null; moveTab = null; render(); window.scrollTo(0, 0); toast('A fresh start'); setTimeout(startTalk, 500); return; }
@@ -80,7 +103,7 @@ document.addEventListener('click', e => {
   act(el.dataset.act, el);
 });
 document.addEventListener('pointerdown', e => {
-  const b = e.target.closest('.btn, .hand button, .opt, .pick, .gearitem, .pchip, .swatch, .q-shuffle, .maplabel, .nav button, .cond, .mini, .linkbtn');
+  const b = e.target.closest('.btn, .hand button, .opt, .pick, .gearitem, .pchip, .swatch, .q-shuffle, .maplabel, .nav button, .cond, .mini, .linkbtn, .stp');
   if (!b || b.disabled) return;
   sfx('tap');
   if (REDUCED || !b.matches('.btn, .hand button, .opt, .pick, .gearitem')) return;

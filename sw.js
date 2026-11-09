@@ -1,11 +1,11 @@
 'use strict';
 /* Offline support. Bump VERSION whenever any app file changes so installed copies fetch the update. */
-const VERSION = 'hearth-1.0.1';
+const VERSION = 'hearth-1.1.0';
 const CORE = 'core-' + VERSION, FONTS = 'fonts-v1';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/core.js', 'js/campaign-default.js', 'js/rules.js', 'js/state.js', 'js/engine.js', 'js/art-chars.js',
-  'js/art-world.js', 'js/play.js', 'js/views.js', 'js/actions.js', 'js/main.js',
+  'js/art-world.js', 'js/play.js', 'js/ledger.js', 'js/views.js', 'js/editor.js', 'js/actions.js', 'js/main.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'
 ];
 /* The Google Fonts stylesheets that index.html loads (keep the two lists the same). The first page load happens before

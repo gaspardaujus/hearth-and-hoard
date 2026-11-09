@@ -302,3 +302,31 @@ button.gearitem { cursor: pointer; }
 .phases li.done .pn { color: var(--sage); border-color: #4E5E40; }
 .phases li.now .pn { color: var(--ember-hi); border-color: var(--ember); }
 .phases li.now b { color: var(--ember-hi); }
+
+/* ---- 1.1: the Ledger of Release, seals, quantities and editing ---- */
+.waxseal { position: relative; display: inline-block; flex: none; line-height: 0; }
+.waxseal > img { display: block; width: 100%; height: 100%; }
+.waxseal .emb { position: absolute; line-height: 0; }
+.moment > .waxseal { align-self: center; }
+.lrows { list-style: none; padding: 0; display: flex; flex-direction: column; }
+.lrow { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #3A332F; }
+.lrow:first-child { border-top: 0; padding-top: 2px; }
+.lname { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.lname b { font-size: 17px; font-weight: 700; }
+.lname small { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ash); }
+.lrow.on .lname small { color: var(--ember-hi); }
+.lcount { font-size: 28px; font-weight: 700; line-height: 1; color: var(--bone); min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.lrow:not(.on) .lcount { color: var(--ash); }
+.lnext { display: flex; flex-direction: column; gap: 6px; }
+.qty { color: var(--ember-hi); font-weight: 700; }
+.item .txt .edit { align-self: flex-start; font-size: 14px; padding: 4px 0 0; }
+.batch .edit { font-size: 14px; }
+.linkbtn.danger { color: #E9806A; align-self: flex-start; }
+.stepper { display: flex; align-items: stretch; }
+.stepper input { width: 84px; flex: none; text-align: center; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stp { appearance: none; width: 48px; min-height: 44px; background: var(--stone-3); border: 1.5px solid var(--edge-hi); color: var(--bone); font-family: var(--f-ui); font-size: 24px; font-weight: 700; line-height: 1; cursor: pointer; }
+.stp:active { transform: translateY(1px); }
+.sealedq summary { cursor: pointer; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--bone-dim); padding: 6px 0; }
+.sealedq[open] summary { margin-bottom: 6px; }
+.sealedq .lane { margin: 6px 0 4px; }
